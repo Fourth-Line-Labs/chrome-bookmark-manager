@@ -1,0 +1,32 @@
+{
+  "roots": {
+    "bookmark_bar": {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "id": "4",
+                  "name": "Python Docs",
+                  "type": "url",
+                  "url": "https://docs.python.org/3/"
+                }
+              ],
+              "id": "3",
+              "name": "References",
+              "type": "folder"
+            }
+          ],
+          "id": "2",
+          "name": "Engineering",
+          "type": "folder"
+        }
+      ],
+      "id": "1",
+      "name": "Bookmarks Bar",
+      "type": "folder"
+    }
+  },
+  "version": 1
+}

@@ -1,0 +1,56 @@
+[project]
+name = "chrome-bookmark-manager"
+version = "0.1.0"
+description = "Read-only Chrome bookmark audit tooling."
+authors = [{ name = "Jeremy", email = "jeremy@example.com" }]
+readme = "README.md"
+requires-python = ">=3.12,<4.0"
+dependencies = ["pydantic>=2.11.0,<3.0.0"]
+
+[project.scripts]
+chrome-bookmark-manager = "chrome_bookmark_manager.cli:main"
+
+[tool.poetry]
+packages = [{ include = "chrome_bookmark_manager", from = "src" }]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.0"
+pyright = "^1.1.402"
+ruff = "^0.11.13"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+reportMissingTypeStubs = "error"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "COM812",
+  "D203",
+  "D213",
+  "D100",
+  "D101",
+  "D102",
+  "D103",
+  "D104",
+  "D105",
+  "D107",
+  "ISC001",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["INP001", "S101"]

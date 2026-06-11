@@ -1,0 +1,17 @@
+{
+  "roots": {
+    "bookmark_bar": {
+      "children": [
+        {
+          "id": "2",
+          "name": "Missing URL",
+          "type": "url"
+        }
+      ],
+      "id": "1",
+      "name": "Bookmarks Bar",
+      "type": "folder"
+    }
+  },
+  "version": 1
+}
