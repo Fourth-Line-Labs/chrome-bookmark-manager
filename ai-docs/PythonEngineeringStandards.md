@@ -10,7 +10,7 @@ created: 2026-06-11
 updated: 2026-10-06
 tags: [python, standards, ralph]
 status: current
-source_ref: "main @ bda8049"
+source_ref: "main @ f654c35"
 audience: "Humans and coding agents (Ralph) working in this repo"
 ---
 
