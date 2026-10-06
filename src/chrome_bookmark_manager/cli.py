@@ -90,7 +90,9 @@ def _build_parser() -> argparse.ArgumentParser:
         prog="chrome-bookmark-manager",
         description="Read-only Chrome bookmark audit tool.",
         epilog=(
-            "Every run that gets past argument parsing writes a debug log. "
+            "Every run that gets past argument parsing writes a debug log "
+            "when its location can be written (otherwise it warns and logs to "
+            "the console only). "
             "Set CHROME_BOOKMARK_MANAGER_LOG_DIR to a directory, or pass "
             "--log-file with a file path (it wins over the variable), to "
             "change where it goes; run with -v to print its location."
