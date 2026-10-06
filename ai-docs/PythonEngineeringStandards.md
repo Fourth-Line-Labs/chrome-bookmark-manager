@@ -43,4 +43,6 @@ Every Ralph implementation prompt for this project should reference the shared s
 
 Use this line in Ralph prompts:
 
-> Follow `/mnt/shared/standards/python/README.md` and `ai-docs/PythonEngineeringStandards.md`.
+> Follow `/mnt/shared/standards/python/README.md` as the machine-wide Python source of truth and `ai-docs/PythonEngineeringStandards.md` as the project-specific addendum.
+
+This is the same sentence used in the Standard Ralph Prompt Clause in [RalphPromptReferences.md](./RalphPromptReferences.md); keep the two identical.
