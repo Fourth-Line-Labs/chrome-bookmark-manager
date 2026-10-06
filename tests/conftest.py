@@ -17,3 +17,4 @@ def isolated_log_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterato
     for handler in list(logger.handlers):
         logger.removeHandler(handler)
         handler.close()
+    logger.propagate = True

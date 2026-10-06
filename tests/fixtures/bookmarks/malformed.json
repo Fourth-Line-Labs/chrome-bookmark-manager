@@ -1,2 +1,9 @@
 {
-  "roots":
+  "roots": {
+    "bookmark_bar": {
+      "children": [
+        {
+          "id": "2",
+          "name": "Canary Bookmark Name",
+          "type": "url",
+          "url": "https://canary.example/

@@ -35,15 +35,15 @@ def discover_bookmark_files(
     selected_env = os.environ if env is None else env
     exists = path_exists or _path_exists
 
-    candidates = candidate_bookmark_paths(
-        platform=selected_platform,
-        home=selected_home,
-        env=selected_env,
-    )
     logger.debug(
         "Discovering bookmark files: platform=%s home=%s",
         selected_platform,
         selected_home,
+    )
+    candidates = candidate_bookmark_paths(
+        platform=selected_platform,
+        home=selected_home,
+        env=selected_env,
     )
     found: list[BookmarkCandidate] = []
     for candidate in candidates:

@@ -2,13 +2,14 @@ from pathlib import Path
 
 import pytest
 
-from chrome_bookmark_manager import cli
+from chrome_bookmark_manager import __version__, cli
 from chrome_bookmark_manager.cli import main
 from chrome_bookmark_manager.logging_setup import LOG_FILE_NAME
 
 FIXTURES = Path(__file__).parent / "fixtures" / "bookmarks"
 PARSE_ERROR_EXIT_CODE = 2
 UNEXPECTED_ERROR_EXIT_CODE = 1
+MALFORMED_CANARY = "Canary Bookmark Name"
 
 
 def test_cli_writes_markdown_output(tmp_path: Path) -> None:
@@ -47,12 +48,15 @@ def test_cli_writes_run_log_to_default_location(isolated_log_dir: Path) -> None:
 
     log = (isolated_log_dir / LOG_FILE_NAME).read_text(encoding="utf-8")
     assert exit_code == 0
-    assert "chrome-bookmark-manager 0.1.0 starting" in log
+    assert f"chrome-bookmark-manager {__version__} starting" in log
     assert f"Loading bookmarks from {bookmarks_file}" in log
     assert "Finished with exit code 0" in log
 
 
-def test_cli_log_file_option_overrides_location(tmp_path: Path) -> None:
+def test_cli_log_file_option_overrides_location(
+    tmp_path: Path,
+    isolated_log_dir: Path,
+) -> None:
     log_file = tmp_path / "custom" / "audit.log"
 
     main(
@@ -61,17 +65,22 @@ def test_cli_log_file_option_overrides_location(tmp_path: Path) -> None:
             str(FIXTURES / "simple_bookmarks.json"),
             "--log-file",
             str(log_file),
-        ]
+        ],
     )
 
     assert "starting" in log_file.read_text(encoding="utf-8")
+    assert not (isolated_log_dir / LOG_FILE_NAME).exists()
 
 
-def test_cli_logs_never_contain_bookmark_content(isolated_log_dir: Path) -> None:
+def test_cli_logs_never_contain_bookmark_content(
+    isolated_log_dir: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     main(["-vv", "--bookmarks-file", str(FIXTURES / "simple_bookmarks.json")])
 
     log = (isolated_log_dir / LOG_FILE_NAME).read_text(encoding="utf-8")
     assert "python.org" not in log
+    assert "python.org" not in capsys.readouterr().err
 
 
 def test_cli_markdown_on_stdout_is_not_mixed_with_logs(
@@ -126,3 +135,45 @@ def test_cli_schema_error_does_not_leak_bookmark_content(
     assert "invalid Chrome schema" in log
     assert "Missing URL" not in log
     assert "Missing URL" not in err
+
+
+def test_cli_malformed_json_error_does_not_leak_bookmark_content(
+    isolated_log_dir: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    main(["-vv", "--bookmarks-file", str(FIXTURES / "malformed.json")])
+
+    log = (isolated_log_dir / LOG_FILE_NAME).read_text(encoding="utf-8")
+    err = capsys.readouterr().err
+    assert "not valid JSON" in log
+    assert MALFORMED_CANARY not in log
+    assert MALFORMED_CANARY not in err
+
+
+def test_cli_unexpected_error_without_log_file_points_to_console(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def explode(_bookmarks: object) -> str:
+        message = "renderer blew up"
+        raise RuntimeError(message)
+
+    blocker = tmp_path / "not-a-directory"
+    blocker.write_text("", encoding="utf-8")
+    monkeypatch.setattr(cli, "render_markdown", explode)
+
+    exit_code = main(
+        [
+            "--bookmarks-file",
+            str(FIXTURES / "simple_bookmarks.json"),
+            "--log-file",
+            str(blocker / "run.log"),
+        ],
+    )
+
+    err = capsys.readouterr().err
+    assert exit_code == UNEXPECTED_ERROR_EXIT_CODE
+    assert "File logging disabled" in err
+    assert "Details: the console output above" in err
+    assert "RuntimeError: renderer blew up" in err

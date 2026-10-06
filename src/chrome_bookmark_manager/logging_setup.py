@@ -43,12 +43,17 @@ def console_level(verbosity: int) -> int:
 def configure_logging(*, verbosity: int, log_file: Path | None = None) -> Path | None:
     """Send package logs to stderr and a rotating file.
 
-    Returns the log file in use, or None when it could not be opened. Calling
-    this again replaces the handlers from the previous call.
+    Returns the log file in use, or None when it could not be opened.
+
+    This is application-level setup for the CLI and takes ownership of the
+    package logger: each call removes and closes every handler attached to it,
+    including any a host process added, and stops propagation so records are
+    not also emitted by root-logger handlers.
     """
     logger = logging.getLogger(LOGGER_NAME)
     _remove_handlers(logger)
     logger.setLevel(logging.DEBUG)
+    logger.propagate = False
 
     console = logging.StreamHandler()
     console.setLevel(console_level(verbosity))

@@ -1,3 +1,4 @@
+import io
 import logging
 from pathlib import Path
 
@@ -104,3 +105,18 @@ def test_unwritable_log_location_disables_file_logging(
 
     assert used is None
     assert "File logging disabled" in capsys.readouterr().err
+
+
+def test_configured_logs_do_not_propagate_to_root_handlers(tmp_path: Path) -> None:
+    root_stream = io.StringIO()
+    root_handler = logging.StreamHandler(root_stream)
+    root = logging.getLogger()
+    root.addHandler(root_handler)
+    try:
+        configure_logging(verbosity=0, log_file=tmp_path / "run.log")
+        logging.getLogger(f"{LOGGER_NAME}.test").warning("emitted once")
+    finally:
+        root.removeHandler(root_handler)
+
+    assert root_stream.getvalue() == ""
+    assert "emitted once" in (tmp_path / "run.log").read_text(encoding="utf-8")

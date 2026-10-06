@@ -151,3 +151,20 @@ def test_windows_missing_local_app_data_logs_warning(
 
     assert candidates == []
     assert "LOCALAPPDATA is not set or is empty" in caplog.text
+
+
+def test_discovery_header_is_logged_before_local_app_data_warning(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with caplog.at_level(logging.DEBUG, logger="chrome_bookmark_manager"):
+        discover_bookmark_files(
+            platform="windows",
+            home=PurePath("C:/Users/alex"),
+            env={},
+            path_exists=lambda _path: False,
+        )
+
+    messages = caplog.messages
+    header = next(i for i, m in enumerate(messages) if m.startswith("Discovering"))
+    warning = next(i for i, m in enumerate(messages) if "LOCALAPPDATA" in m)
+    assert header < warning
