@@ -48,7 +48,7 @@ def candidate_bookmark_paths(
 ) -> list[BookmarkCandidate]:
     if platform == "windows":
         local_app_data = env.get("LOCALAPPDATA")
-        if local_app_data is None:
+        if not local_app_data:
             return []
         base = PurePath(local_app_data)
         return [

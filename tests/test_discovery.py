@@ -124,3 +124,13 @@ def test_windows_discovery_uses_injected_env_even_when_empty(
     )
 
     assert candidates == []
+
+
+def test_windows_empty_local_app_data_yields_no_candidates() -> None:
+    candidates = candidate_bookmark_paths(
+        platform="windows",
+        home=PurePath("C:/Users/alex"),
+        env={"LOCALAPPDATA": ""},
+    )
+
+    assert candidates == []
