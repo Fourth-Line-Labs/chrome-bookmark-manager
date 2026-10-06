@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -34,7 +35,7 @@ def discover_bookmark_files(
 ) -> list[BookmarkCandidate]:
     selected_platform = platform or current_platform()
     selected_home = home or Path.home()
-    selected_env = env or {}
+    selected_env = os.environ if env is None else env
     exists = path_exists or _path_exists
 
     candidates = candidate_bookmark_paths(

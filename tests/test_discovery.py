@@ -1,10 +1,14 @@
 from pathlib import PurePath
 
+import pytest
+
 from chrome_bookmark_manager.discovery import (
     BookmarkCandidate,
     candidate_bookmark_paths,
     discover_bookmark_files,
 )
+
+WINDOWS_CANDIDATE_COUNT = 3
 
 
 def test_linux_candidates_include_chrome_profiles_and_chromium() -> None:
@@ -79,3 +83,44 @@ def test_discovery_returns_all_existing_candidates() -> None:
             PurePath("/home/alex/.config/chromium/Default/Bookmarks"),
         ),
     ]
+
+
+WINDOWS_LOCAL_APP_DATA = "C:/Users/alex/AppData/Local"
+WINDOWS_CHROME_DEFAULT = PurePath(
+    "C:/Users/alex/AppData/Local/Google/Chrome/User Data/Default/Bookmarks",
+)
+
+
+def test_windows_discovery_reads_process_environment_when_env_omitted(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LOCALAPPDATA", WINDOWS_LOCAL_APP_DATA)
+    checked: list[PurePath] = []
+
+    def path_exists(path: PurePath) -> bool:
+        checked.append(path)
+        return path == WINDOWS_CHROME_DEFAULT
+
+    candidates = discover_bookmark_files(
+        platform="windows",
+        home=PurePath("C:/Users/alex"),
+        path_exists=path_exists,
+    )
+
+    assert [candidate.path for candidate in candidates] == [WINDOWS_CHROME_DEFAULT]
+    assert len(checked) == WINDOWS_CANDIDATE_COUNT
+
+
+def test_windows_discovery_uses_injected_env_even_when_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LOCALAPPDATA", WINDOWS_LOCAL_APP_DATA)
+
+    candidates = discover_bookmark_files(
+        platform="windows",
+        home=PurePath("C:/Users/alex"),
+        env={},
+        path_exists=lambda _path: True,
+    )
+
+    assert candidates == []
