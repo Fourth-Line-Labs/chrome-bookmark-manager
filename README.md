@@ -32,6 +32,27 @@ poetry run chrome-bookmark-manager \
   --output bookmarks.md
 ```
 
+## Logging
+
+Every run writes a debug log, so there is a record to inspect when something
+goes wrong. The log file rotates at 1 MB and keeps three old copies.
+
+| Platform | Default log file |
+| --- | --- |
+| Linux | `~/.local/state/chrome-bookmark-manager/log/chrome-bookmark-manager.log` |
+| macOS | `~/Library/Logs/chrome-bookmark-manager/chrome-bookmark-manager.log` |
+| Windows | `%LOCALAPPDATA%\chrome-bookmark-manager\Logs\chrome-bookmark-manager.log` |
+
+- `-v` prints info messages to stderr, and `-vv` prints debug messages. They
+  never go to stdout, so piping Markdown output stays clean.
+- `--log-file PATH` or the `CHROME_BOOKMARK_MANAGER_LOG_DIR` environment
+  variable changes where the log goes.
+- An unexpected failure prints the log file path. Attach that file when you
+  report a problem.
+
+Logs record file paths, counts, and errors. They never include bookmark names
+or URLs, including in validation errors.
+
 ## Engineering Standards
 
 This project follows a shared Python engineering standard (Poetry, strict

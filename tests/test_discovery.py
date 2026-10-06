@@ -1,3 +1,4 @@
+import logging
 from pathlib import PurePath
 
 import pytest
@@ -134,3 +135,19 @@ def test_windows_empty_local_app_data_yields_no_candidates() -> None:
     )
 
     assert candidates == []
+
+
+@pytest.mark.parametrize("env", [{}, {"LOCALAPPDATA": ""}])
+def test_windows_missing_local_app_data_logs_warning(
+    env: dict[str, str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with caplog.at_level(logging.WARNING, logger="chrome_bookmark_manager"):
+        candidates = candidate_bookmark_paths(
+            platform="windows",
+            home=PurePath("C:/Users/alex"),
+            env=env,
+        )
+
+    assert candidates == []
+    assert "LOCALAPPDATA is not set or is empty" in caplog.text

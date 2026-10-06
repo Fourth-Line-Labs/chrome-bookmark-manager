@@ -8,7 +8,7 @@ from chrome_bookmark_manager.models.chrome_url_node import ChromeUrlNode
 
 
 class ChromeFolderNode(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="ignore", hide_input_in_errors=True)
 
     type: Literal["folder"]
     id: str

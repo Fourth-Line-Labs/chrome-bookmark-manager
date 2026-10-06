@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import sys
 from collections.abc import Callable, Mapping
@@ -10,6 +11,8 @@ from chrome_bookmark_manager.models import BookmarkCandidate
 
 PlatformName = Literal["windows", "linux", "macos"]
 PathExists = Callable[[PurePath], bool]
+
+logger = logging.getLogger(__name__)
 
 
 def current_platform() -> PlatformName:
@@ -37,7 +40,29 @@ def discover_bookmark_files(
         home=selected_home,
         env=selected_env,
     )
-    return [candidate for candidate in candidates if exists(candidate.path)]
+    logger.debug(
+        "Discovering bookmark files: platform=%s home=%s",
+        selected_platform,
+        selected_home,
+    )
+    found: list[BookmarkCandidate] = []
+    for candidate in candidates:
+        present = exists(candidate.path)
+        logger.debug(
+            "%s candidate %s (%s): %s",
+            "Found" if present else "No",
+            candidate.browser,
+            candidate.profile,
+            candidate.path,
+        )
+        if present:
+            found.append(candidate)
+    logger.info(
+        "Found %d of %d candidate bookmark files",
+        len(found),
+        len(candidates),
+    )
+    return found
 
 
 def candidate_bookmark_paths(
@@ -49,6 +74,10 @@ def candidate_bookmark_paths(
     if platform == "windows":
         local_app_data = env.get("LOCALAPPDATA")
         if not local_app_data:
+            logger.warning(
+                "LOCALAPPDATA is not set or is empty; "
+                "cannot locate Windows bookmark files",
+            )
             return []
         base = PurePath(local_app_data)
         return [

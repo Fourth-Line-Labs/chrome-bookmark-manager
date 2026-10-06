@@ -62,6 +62,18 @@ files = [
 ]
 
 [[package]]
+name = "platformdirs"
+version = "4.12.3"
+description = "A small Python package for determining appropriate platform-specific dirs, e.g. a `user data dir`."
+optional = false
+python-versions = ">=3.10"
+groups = ["main"]
+files = [
+    {file = "platformdirs-4.12.3-py3-none-any.whl", hash = "sha256:080f3b39423b5abfca9a23d84c4e9795f54d395cd8459867a8ded44084fcd5f8"},
+    {file = "platformdirs-4.12.3.tar.gz", hash = "sha256:427fc0bb321ae0c5b037fa03238ca74820437be162e78b4848c4d4055b9b766c"},
+]
+
+[[package]]
 name = "pluggy"
 version = "1.6.0"
 description = "plugin and hook calling mechanisms for python"
@@ -348,4 +360,4 @@ typing-extensions = ">=4.12.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "6859ac230dcd03e2cbd86554d4930cfaaa953deb1d1509c1d25f71dbf35e9cb9"
+content-hash = "f6ef39c65db40abc154713b8e9f908fb367a731de043d87e61612cf784601ab0"
