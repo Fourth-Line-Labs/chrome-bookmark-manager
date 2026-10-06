@@ -10,7 +10,7 @@ created: 2026-06-11
 updated: 2026-10-06
 tags: [phase-1, architecture, cli]
 status: current
-source_ref: "chore/phase-1-cleanup @ f654c35"
+source_ref: "main @ f654c35"
 ---
 
 # Phase 1 Read-Only Bookmark Audit
