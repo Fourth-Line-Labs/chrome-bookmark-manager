@@ -1,3 +1,17 @@
+---
+title: "Ralph Prompt: Phase 1 Read-Only Bookmark Audit"
+summary: >-
+  The Ralph code-assist prompt that produced the Phase 1 read-only bookmark
+  audit CLI (discovery, Pydantic parsing, Markdown rendering). Kept as a
+  record; the work it describes landed in bda8049.
+created: 2026-06-11
+updated: 2026-10-06
+tags: [ralph, prompts, phase-1]
+status: archived
+source_ref: "main @ bda8049"
+audience: "Ralph code-assist"
+---
+
 # Ralph Prompt: Phase 1 Read-Only Bookmark Audit
 
 Use this prompt with Ralph `code-assist` for the first implementation slice.
@@ -27,11 +41,12 @@ This slice must be read-only. Do not implement write/reorganization behavior yet
 Read and follow:
 
 - `ai-docs/ChromeBookmarkProjectPhases.md`
+- `/mnt/shared/standards/python/README.md`
 - `ai-docs/PythonEngineeringStandards.md`
 - `ai-docs/ChromeBookMarkFeature.md`
 - `ai-docs/RalphPromptReferences.md`
 
-Use Poetry for the Python environment. Run Ralph from the repository root. Put Python implementation code under root-level `src/` using the standard Python `src` layout. Put public documentation under root-level `docs/`; keep internal AI planning docs under `ai-docs/`. Include `README.md`, `.gitignore`, `.gitattributes`, and `.env.example` when initializing the repository. `.gitignore` must ignore Python caches/build artifacts, virtual environments, local `.env` files, and local agent state such as `.ralph/`, `.agents/`, `.claude/`, and `.codex/`; `.env.example` must remain tracked. Keep Pyright strict, Ruff lint/format, and pytest as required verification gates. Use Pydantic at external data and MCP boundaries, but prefer plain typed internal code where runtime validation is not needed. Do not add type ignores, broad `Any`, casts, or lint suppressions just to silence tooling. Follow SOLID principles pragmatically: keep responsibilities separated, avoid redundant code, isolate platform-specific behavior, and do not add speculative abstractions.
+Follow `/mnt/shared/standards/python/README.md` as the machine-wide Python source of truth and `ai-docs/PythonEngineeringStandards.md` as the project-specific addendum.
 
 ## Git Workflow
 
