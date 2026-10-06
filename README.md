@@ -36,8 +36,9 @@ poetry run chrome-bookmark-manager \
 
 Every run that gets past argument parsing writes a debug log, so there is a
 record to inspect when something goes wrong. Argument errors such as an unknown
-flag are reported on the console only. The log file rotates at 1 MB and keeps
-three old copies.
+flag are reported on the console only. If the log location cannot be written,
+the tool prints a `File logging disabled` warning and continues with console
+output only. The log file rotates at 1 MB and keeps three old copies.
 
 | Platform | Default log file |
 | --- | --- |
