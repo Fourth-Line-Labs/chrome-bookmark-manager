@@ -3,10 +3,10 @@ from pathlib import PurePath
 import pytest
 
 from chrome_bookmark_manager.discovery import (
-    BookmarkCandidate,
     candidate_bookmark_paths,
     discover_bookmark_files,
 )
+from chrome_bookmark_manager.models import BookmarkCandidate
 
 WINDOWS_CANDIDATE_COUNT = 3
 

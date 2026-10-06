@@ -3,19 +3,13 @@ from __future__ import annotations
 import os
 import sys
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
 from pathlib import Path, PurePath
 from typing import Literal
 
+from chrome_bookmark_manager.models import BookmarkCandidate
+
 PlatformName = Literal["windows", "linux", "macos"]
 PathExists = Callable[[PurePath], bool]
-
-
-@dataclass(frozen=True)
-class BookmarkCandidate:
-    browser: str
-    profile: str
-    path: PurePath
 
 
 def current_platform() -> PlatformName:

@@ -54,3 +54,8 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["INP001", "S101"]
+
+[tool.ruff.lint.flake8-type-checking]
+# Pydantic resolves field annotations at runtime, so imports used in a
+# BaseModel's fields must stay real imports, not TYPE_CHECKING-only ones.
+runtime-evaluated-base-classes = ["pydantic.BaseModel"]

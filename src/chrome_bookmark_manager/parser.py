@@ -4,31 +4,15 @@ from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
+from chrome_bookmark_manager.errors import (
+    BookmarkFileMissingError,
+    BookmarkJsonError,
+    BookmarkSchemaError,
+)
 from chrome_bookmark_manager.models import ChromeBookmarksFile
 
 if TYPE_CHECKING:
     from pathlib import Path
-
-
-class BookmarkParseError(Exception):
-    """Base class for bookmark input errors."""
-
-
-class BookmarkFileMissingError(BookmarkParseError):
-    def __init__(self, path: Path) -> None:
-        super().__init__(f"Bookmark file does not exist: {path}")
-
-
-class BookmarkJsonError(BookmarkParseError):
-    def __init__(self, path: Path) -> None:
-        super().__init__(f"Bookmark file is not valid JSON: {path}")
-
-
-class BookmarkSchemaError(BookmarkParseError):
-    def __init__(self, path: Path, details: str) -> None:
-        super().__init__(
-            f"Bookmark file has an invalid Chrome schema: {path}: {details}",
-        )
 
 
 def load_bookmarks_file(path: Path) -> ChromeBookmarksFile:

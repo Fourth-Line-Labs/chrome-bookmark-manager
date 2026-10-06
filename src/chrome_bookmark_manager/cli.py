@@ -6,7 +6,8 @@ from pathlib import Path
 from typing import NoReturn
 
 from chrome_bookmark_manager.discovery import discover_bookmark_files
-from chrome_bookmark_manager.parser import BookmarkParseError, load_bookmarks_file
+from chrome_bookmark_manager.errors import BookmarkParseError
+from chrome_bookmark_manager.parser import load_bookmarks_file
 from chrome_bookmark_manager.renderer import render_markdown
 
 
