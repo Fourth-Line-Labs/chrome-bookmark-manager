@@ -32,6 +32,24 @@ poetry run chrome-bookmark-manager \
   --output bookmarks.md
 ```
 
+## Engineering Standards
+
+This project follows a shared Python engineering standard (Poetry, strict
+Pyright, Ruff, pytest, Pydantic at boundaries, Git workflow). It currently
+lives outside this repository, on the development machine at:
+
+```text
+/mnt/shared/standards/python/README.md
+```
+
+Project-specific additions are in
+[`ai-docs/PythonEngineeringStandards.md`](ai-docs/PythonEngineeringStandards.md).
+
+If you cloned this repository somewhere else, that path will not exist.
+[Issue #1](https://github.com/Fourth-Line-Labs/chrome-bookmark-manager/issues/1)
+tracks moving the shared standards into their own repository so they are
+available everywhere.
+
 ## Verification
 
 ```bash

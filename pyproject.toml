@@ -54,3 +54,11 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["INP001", "S101"]
+
+[tool.ruff.lint.flake8-type-checking]
+# Pydantic resolves field annotations at runtime, and dataclass field
+# annotations must stay resolvable for typing.get_type_hints and future
+# Pydantic/MCP schema generation, so imports used in their fields must stay
+# real imports, not TYPE_CHECKING-only ones.
+runtime-evaluated-base-classes = ["pydantic.BaseModel"]
+runtime-evaluated-decorators = ["dataclasses.dataclass"]

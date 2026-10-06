@@ -1,0 +1,4 @@
+from chrome_bookmark_manager.models.chrome_folder_node import ChromeFolderNode
+from chrome_bookmark_manager.models.chrome_url_node import ChromeUrlNode
+
+BookmarkNode = ChromeUrlNode | ChromeFolderNode

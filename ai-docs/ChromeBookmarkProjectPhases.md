@@ -1,3 +1,18 @@
+---
+title: "Chrome Bookmark Manager Project Phases"
+summary: >-
+  Compact reference for the three implementation phases: Phase 1 audit and
+  clean MVP (read Chrome's Bookmarks JSON, render a Markdown tree), Phase 2
+  semantic memory (crawl, embed, ChromaDB search), and Phase 3 live watcher
+  (Chrome extension). Also lists cross-cutting safety constraints and links to
+  the standards and Ralph prompt references.
+created: 2026-06-11
+updated: 2026-10-06
+tags: [planning, phases, roadmap]
+status: current
+source_ref: "main @ f654c35"
+---
+
 # Chrome Bookmark Manager Project Phases
 
 This file is a compact reference for the three major implementation phases in the Chrome bookmark manager project.
@@ -50,5 +65,6 @@ Expected extension capabilities:
 
 ## Related References
 
-- [PythonEngineeringStandards.md](./PythonEngineeringStandards.md) defines the Python, Poetry, typing, Pydantic, linting, and testing standards for implementation work.
+- [/mnt/shared/standards/python/README.md](/mnt/shared/standards/python/README.md) defines the machine-wide Python, Poetry, typing, Pydantic, linting, and testing standards for implementation work.
+- [PythonEngineeringStandards.md](./PythonEngineeringStandards.md) points to that shared standard and adds this project's addendum.
 - [RalphPromptReferences.md](./RalphPromptReferences.md) defines the standard references and clauses to include in Ralph prompts.

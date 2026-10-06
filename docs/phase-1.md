@@ -1,3 +1,18 @@
+---
+title: "Phase 1 Read-Only Bookmark Audit"
+summary: >-
+  Public overview of Phase 1: a read-only CLI that discovers Chrome/Chromium
+  bookmark files on Windows, Linux, and macOS, validates the Bookmarks JSON
+  with Pydantic, and renders a Markdown outline. Describes each module's role
+  (discovery, models, errors, parser, renderer, cli) and the read-only
+  constraint.
+created: 2026-06-11
+updated: 2026-10-06
+tags: [phase-1, architecture, cli]
+status: current
+source_ref: "main @ f654c35"
+---
+
 # Phase 1 Read-Only Bookmark Audit
 
 Phase 1 provides a safe command-line audit path for Chrome and Chromium
@@ -7,12 +22,15 @@ produce a Markdown outline that preserves folder nesting.
 
 ## Architecture
 
-- `discovery` finds existing bookmark candidates from injected platform, home,
-  and environment inputs.
-- `models` validates Chrome bookmark JSON at the external file boundary with
-  Pydantic.
-- `parser` loads a bookmark file and reports missing, malformed, or invalid
-  input clearly.
+- `discovery` finds existing bookmark candidates for the current platform,
+  home directory, and process environment. Each of those inputs can be
+  injected, so tests never depend on the real machine.
+- `models` holds the Pydantic models that validate Chrome bookmark JSON at the
+  external file boundary, plus the `BookmarkCandidate` value object returned by
+  discovery.
+- `errors` defines `BookmarkParseError` and its subclasses for missing,
+  malformed, and schema-invalid bookmark files.
+- `parser` loads a bookmark file and raises those errors with clear messages.
 - `renderer` converts validated bookmark data into Markdown.
 - `cli` adapts command-line arguments to those boundaries.
 

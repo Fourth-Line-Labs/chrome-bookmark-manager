@@ -2,12 +2,12 @@ from pathlib import Path
 
 import pytest
 
-from chrome_bookmark_manager.parser import (
+from chrome_bookmark_manager.errors import (
     BookmarkFileMissingError,
     BookmarkJsonError,
     BookmarkSchemaError,
-    load_bookmarks_file,
 )
+from chrome_bookmark_manager.parser import load_bookmarks_file
 
 FIXTURES = Path(__file__).parent / "fixtures" / "bookmarks"
 

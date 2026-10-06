@@ -1,20 +1,15 @@
 from __future__ import annotations
 
+import os
 import sys
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
 from pathlib import Path, PurePath
 from typing import Literal
 
+from chrome_bookmark_manager.models import BookmarkCandidate
+
 PlatformName = Literal["windows", "linux", "macos"]
 PathExists = Callable[[PurePath], bool]
-
-
-@dataclass(frozen=True)
-class BookmarkCandidate:
-    browser: str
-    profile: str
-    path: PurePath
 
 
 def current_platform() -> PlatformName:
@@ -34,7 +29,7 @@ def discover_bookmark_files(
 ) -> list[BookmarkCandidate]:
     selected_platform = platform or current_platform()
     selected_home = home or Path.home()
-    selected_env = env or {}
+    selected_env = os.environ if env is None else env
     exists = path_exists or _path_exists
 
     candidates = candidate_bookmark_paths(
@@ -53,7 +48,7 @@ def candidate_bookmark_paths(
 ) -> list[BookmarkCandidate]:
     if platform == "windows":
         local_app_data = env.get("LOCALAPPDATA")
-        if local_app_data is None:
+        if not local_app_data:
             return []
         base = PurePath(local_app_data)
         return [
