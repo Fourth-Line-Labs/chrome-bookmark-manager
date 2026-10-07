@@ -12,9 +12,79 @@ up, lock, or reorganize live bookmark files.
 
 ## Install
 
+For development, from a clone of this repository:
+
 ```bash
 poetry install
 ```
+
+## Try It Without Cloning
+
+The repository is public, so any machine with **Python 3.12 or newer** can
+install the tool into a throwaway virtual environment. Neither Git nor Poetry
+is needed. Nothing is installed system-wide, and you can delete the
+environment folder afterwards.
+
+Windows (PowerShell):
+
+```powershell
+py -3.12 -m venv $env:TEMP\cbm
+& $env:TEMP\cbm\Scripts\pip install https://github.com/Fourth-Line-Labs/chrome-bookmark-manager/archive/refs/heads/main.zip
+
+& $env:TEMP\cbm\Scripts\chrome-bookmark-manager -v --list-discovered
+& $env:TEMP\cbm\Scripts\chrome-bookmark-manager -v `
+    --bookmarks-file "$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Bookmarks" `
+    --output "$HOME\bookmarks.md"
+```
+
+macOS and Linux:
+
+```bash
+python3 -m venv /tmp/cbm
+/tmp/cbm/bin/pip install https://github.com/Fourth-Line-Labs/chrome-bookmark-manager/archive/refs/heads/main.zip
+
+/tmp/cbm/bin/chrome-bookmark-manager -v --list-discovered
+/tmp/cbm/bin/chrome-bookmark-manager -v \
+  --bookmarks-file "$HOME/Library/Application Support/Google/Chrome/Default/Bookmarks" \
+  --output "$HOME/bookmarks.md"
+```
+
+On Linux the default Chrome file is
+`~/.config/google-chrome/Default/Bookmarks`. On Debian and Ubuntu, `python3 -m
+venv` needs the `python3-venv` package.
+
+The tool only reads bookmark files, so it is safe to run while Chrome is open.
+
+### Finding your bookmarks file
+
+`--list-discovered` currently checks only the `Default` and `Profile 1`
+profiles of Chrome and Chromium
+([#5](https://github.com/Fourth-Line-Labs/chrome-bookmark-manager/issues/5)).
+If your bookmarks are somewhere else, point `--bookmarks-file` at the file
+directly:
+
+- **Other Chrome profiles:** open `chrome://version` in Chrome. The
+  *Profile Path* line shows the profile folder; the file is `Bookmarks` inside
+  it.
+- **Bookmarks saved to your Google Account** (without full Chrome Sync) are
+  stored in a separate `AccountBookmarks` file in the same profile folder.
+- **Microsoft Edge** uses the same format:
+  `%LOCALAPPDATA%\Microsoft\Edge\User Data\Default\Bookmarks` on Windows.
+
+### Known limitations
+
+- On Windows, printing Markdown to the console can fail when a bookmark name
+  contains characters the console encoding can't represent, such as emoji
+  ([#4](https://github.com/Fourth-Line-Labs/chrome-bookmark-manager/issues/4)).
+  Use `--output` to write a file instead.
+
+### Reporting a problem
+
+Run the command again with `-v`, then attach the log file it names (see
+[Logging](#logging)). Logs contain file paths, which include your username, but
+no bookmark names or URLs. If the problem is in the Markdown output itself,
+describe what looks wrong instead, because the log deliberately can't show
+bookmark content.
 
 ## Usage
 
