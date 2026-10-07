@@ -5,7 +5,7 @@ description = "Read-only Chrome bookmark audit tooling."
 authors = [{ name = "Jeremy", email = "jeremy@example.com" }]
 readme = "README.md"
 requires-python = ">=3.12,<4.0"
-dependencies = ["pydantic>=2.11.0,<3.0.0"]
+dependencies = ["pydantic>=2.11.0,<3.0.0", "platformdirs>=4.12.3,<5.0.0"]
 
 [project.scripts]
 chrome-bookmark-manager = "chrome_bookmark_manager.cli:main"

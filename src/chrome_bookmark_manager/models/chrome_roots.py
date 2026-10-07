@@ -6,7 +6,7 @@ from chrome_bookmark_manager.models.chrome_folder_node import ChromeFolderNode
 
 
 class ChromeRoots(BaseModel):
-    model_config = ConfigDict(extra="ignore")
+    model_config = ConfigDict(extra="ignore", hide_input_in_errors=True)
 
     bookmark_bar: ChromeFolderNode | None = None
     other: ChromeFolderNode | None = None
