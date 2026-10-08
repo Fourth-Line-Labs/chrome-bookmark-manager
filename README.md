@@ -25,10 +25,14 @@ install the tool into a throwaway virtual environment. Neither Git nor Poetry
 is needed. Nothing is installed system-wide, and you can delete the
 environment folder afterwards.
 
+These steps install the **latest development version from `main`**, not a
+tagged release, so two installs made on different days can behave differently.
+When reporting a problem, say roughly when you installed.
+
 Windows (PowerShell):
 
 ```powershell
-py -3.12 -m venv $env:TEMP\cbm
+py -3 -m venv $env:TEMP\cbm
 & $env:TEMP\cbm\Scripts\pip install https://github.com/Fourth-Line-Labs/chrome-bookmark-manager/archive/refs/heads/main.zip
 
 & $env:TEMP\cbm\Scripts\chrome-bookmark-manager -v --list-discovered
@@ -36,6 +40,11 @@ py -3.12 -m venv $env:TEMP\cbm
     --bookmarks-file "$env:LOCALAPPDATA\Google\Chrome\User Data\Default\Bookmarks" `
     --output "$HOME\bookmarks.md"
 ```
+
+`py -3` picks the newest Python 3 installed. If pip then reports that the
+Python version is too old, install Python 3.12 or newer. If the `py` launcher
+isn't available (for example with the Microsoft Store Python), use
+`python -m venv $env:TEMP\cbm` instead.
 
 macOS and Linux:
 
@@ -57,8 +66,8 @@ The tool only reads bookmark files, so it is safe to run while Chrome is open.
 
 ### Finding your bookmarks file
 
-`--list-discovered` currently checks only the `Default` and `Profile 1`
-profiles of Chrome and Chromium
+`--list-discovered` currently checks only Chrome's `Default` and `Profile 1`
+profiles and Chromium's `Default` profile
 ([#5](https://github.com/Fourth-Line-Labs/chrome-bookmark-manager/issues/5)).
 If your bookmarks are somewhere else, point `--bookmarks-file` at the file
 directly:
@@ -81,10 +90,15 @@ directly:
 ### Reporting a problem
 
 Run the command again with `-v`, then attach the log file it names (see
-[Logging](#logging)). Logs contain file paths, which include your username, but
-no bookmark names or URLs. If the problem is in the Markdown output itself,
-describe what looks wrong instead, because the log deliberately can't show
-bookmark content.
+[Logging](#logging)). If the output shows a `File logging disabled` warning,
+there is no log file; copy the full console output instead.
+
+Logs contain file paths, which include your username, but regular log messages
+never include bookmark names or URLs. At most, the traceback for an unexpected
+failure can quote a single character from a bookmark, as described under
+[Logging](#logging). If the problem is in the Markdown output itself, describe
+what looks wrong instead, because the log is designed not to show bookmark
+content.
 
 ## Usage
 
