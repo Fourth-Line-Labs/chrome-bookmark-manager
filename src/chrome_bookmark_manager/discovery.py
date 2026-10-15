@@ -16,7 +16,8 @@ ProfileDirectory = tuple[str, str, PurePath]
 
 # Chrome keeps local bookmarks in "Bookmarks". Bookmarks saved to the user's
 # Google Account without full Chrome Sync live beside them in
-# "AccountBookmarks", in the same JSON format.
+# "AccountBookmarks". Its JSON format is assumed to match "Bookmarks"; that
+# has not yet been confirmed against a real AccountBookmarks file.
 BOOKMARK_FILE_NAMES = ("Bookmarks", "AccountBookmarks")
 
 logger = logging.getLogger(__name__)

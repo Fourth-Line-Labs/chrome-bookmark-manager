@@ -80,6 +80,10 @@ directly:
 - **Microsoft Edge** uses the same format:
   `%LOCALAPPDATA%\Microsoft\Edge\User Data\Default\Bookmarks` on Windows.
 
+Reading `AccountBookmarks` assumes it uses the same format as `Bookmarks`,
+which hasn't been confirmed against a real file yet. If it fails with a schema
+error, please report it (see [Reporting a problem](#reporting-a-problem)).
+
 ### Known limitations
 
 - On Windows, printing Markdown to the console can fail when a bookmark name
