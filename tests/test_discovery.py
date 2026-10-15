@@ -9,7 +9,15 @@ from chrome_bookmark_manager.discovery import (
 )
 from chrome_bookmark_manager.models import BookmarkCandidate
 
-WINDOWS_CANDIDATE_COUNT = 3
+WINDOWS_CANDIDATE_COUNT = 6
+
+
+def _bookmark_files(profile_dir: str) -> list[PurePath]:
+    """Both files Chrome may keep in one profile folder, in discovery order."""
+    return [
+        PurePath(profile_dir) / "Bookmarks",
+        PurePath(profile_dir) / "AccountBookmarks",
+    ]
 
 
 def test_linux_candidates_include_chrome_profiles_and_chromium() -> None:
@@ -20,9 +28,9 @@ def test_linux_candidates_include_chrome_profiles_and_chromium() -> None:
     )
 
     assert [candidate.path for candidate in candidates] == [
-        PurePath("/home/alex/.config/google-chrome/Default/Bookmarks"),
-        PurePath("/home/alex/.config/google-chrome/Profile 1/Bookmarks"),
-        PurePath("/home/alex/.config/chromium/Default/Bookmarks"),
+        *_bookmark_files("/home/alex/.config/google-chrome/Default"),
+        *_bookmark_files("/home/alex/.config/google-chrome/Profile 1"),
+        *_bookmark_files("/home/alex/.config/chromium/Default"),
     ]
 
 
@@ -33,12 +41,12 @@ def test_macos_candidates_include_application_support_paths() -> None:
         env={},
     )
 
-    assert candidates[0].path == PurePath(
-        "/Users/alex/Library/Application Support/Google/Chrome/Default/Bookmarks",
-    )
-    assert candidates[2].path == PurePath(
-        "/Users/alex/Library/Application Support/Chromium/Default/Bookmarks",
-    )
+    support = "/Users/alex/Library/Application Support"
+    assert [candidate.path for candidate in candidates] == [
+        *_bookmark_files(f"{support}/Google/Chrome/Default"),
+        *_bookmark_files(f"{support}/Google/Chrome/Profile 1"),
+        *_bookmark_files(f"{support}/Chromium/Default"),
+    ]
 
 
 def test_windows_candidates_use_local_app_data() -> None:
@@ -48,15 +56,63 @@ def test_windows_candidates_use_local_app_data() -> None:
         env={"LOCALAPPDATA": "C:/Users/alex/AppData/Local"},
     )
 
-    assert candidates[0].path == PurePath(
-        "C:/Users/alex/AppData/Local/Google/Chrome/User Data/Default/Bookmarks",
+    local = "C:/Users/alex/AppData/Local"
+    assert [candidate.path for candidate in candidates] == [
+        *_bookmark_files(f"{local}/Google/Chrome/User Data/Default"),
+        *_bookmark_files(f"{local}/Google/Chrome/User Data/Profile 1"),
+        *_bookmark_files(f"{local}/Chromium/User Data/Default"),
+    ]
+
+
+def test_account_bookmarks_candidates_keep_browser_and_profile() -> None:
+    candidates = candidate_bookmark_paths(
+        platform="linux",
+        home=PurePath("/home/alex"),
+        env={},
     )
-    assert candidates[1].path == PurePath(
-        "C:/Users/alex/AppData/Local/Google/Chrome/User Data/Profile 1/Bookmarks",
+
+    account = [c for c in candidates if c.path.name == "AccountBookmarks"]
+    assert [(c.browser, c.profile) for c in account] == [
+        ("Google Chrome", "Default"),
+        ("Google Chrome", "Profile 1"),
+        ("Chromium", "Default"),
+    ]
+
+
+def test_discovery_reports_account_bookmarks_alongside_bookmarks() -> None:
+    profile = "/home/alex/.config/google-chrome/Default"
+    existing = set(_bookmark_files(profile))
+
+    candidates = discover_bookmark_files(
+        platform="linux",
+        home=PurePath("/home/alex"),
+        env={},
+        path_exists=existing.__contains__,
     )
-    assert candidates[2].path == PurePath(
-        "C:/Users/alex/AppData/Local/Chromium/User Data/Default/Bookmarks",
+
+    assert candidates == [
+        BookmarkCandidate("Google Chrome", "Default", PurePath(profile) / "Bookmarks"),
+        BookmarkCandidate(
+            "Google Chrome",
+            "Default",
+            PurePath(profile) / "AccountBookmarks",
+        ),
+    ]
+
+
+def test_discovery_reports_account_bookmarks_without_local_file() -> None:
+    account_only = PurePath(
+        "/home/alex/.config/google-chrome/Profile 1/AccountBookmarks",
     )
+
+    candidates = discover_bookmark_files(
+        platform="linux",
+        home=PurePath("/home/alex"),
+        env={},
+        path_exists={account_only}.__contains__,
+    )
+
+    assert candidates == [BookmarkCandidate("Google Chrome", "Profile 1", account_only)]
 
 
 def test_discovery_returns_all_existing_candidates() -> None:

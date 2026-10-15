@@ -66,17 +66,17 @@ The tool only reads bookmark files, so it is safe to run while Chrome is open.
 
 ### Finding your bookmarks file
 
-`--list-discovered` currently checks only Chrome's `Default` and `Profile 1`
-profiles and Chromium's `Default` profile
+`--list-discovered` checks two files in each profile folder: `Bookmarks`
+(local bookmarks) and `AccountBookmarks` (bookmarks saved to your Google
+Account without full Chrome Sync). It currently checks only Chrome's `Default`
+and `Profile 1` profiles and Chromium's `Default` profile
 ([#5](https://github.com/Fourth-Line-Labs/chrome-bookmark-manager/issues/5)).
 If your bookmarks are somewhere else, point `--bookmarks-file` at the file
 directly:
 
 - **Other Chrome profiles:** open `chrome://version` in Chrome. The
-  *Profile Path* line shows the profile folder; the file is `Bookmarks` inside
-  it.
-- **Bookmarks saved to your Google Account** (without full Chrome Sync) are
-  stored in a separate `AccountBookmarks` file in the same profile folder.
+  *Profile Path* line shows the profile folder. Use `Bookmarks` or
+  `AccountBookmarks` inside it.
 - **Microsoft Edge** uses the same format:
   `%LOCALAPPDATA%\Microsoft\Edge\User Data\Default\Bookmarks` on Windows.
 
