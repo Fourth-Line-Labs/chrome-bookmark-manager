@@ -10,7 +10,7 @@ created: 2026-06-11
 updated: 2026-10-18
 tags: [phase-1, architecture, cli, mcp]
 status: current
-source_ref: "main @ f654c35"
+source_ref: "main @ 9b45a6f"
 ---
 
 # Phase 1 Read-Only Bookmark Audit
