@@ -41,6 +41,16 @@ def test_cli_reports_parse_errors(
     assert "does not exist" in captured.err
 
 
+def test_cli_reports_directory_as_parse_error(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    exit_code = main(["--bookmarks-file", str(tmp_path)])
+
+    assert exit_code == PARSE_ERROR_EXIT_CODE
+    assert "not a regular file" in capsys.readouterr().err
+
+
 def test_cli_writes_run_log_to_default_location(isolated_log_dir: Path) -> None:
     bookmarks_file = FIXTURES / "simple_bookmarks.json"
 

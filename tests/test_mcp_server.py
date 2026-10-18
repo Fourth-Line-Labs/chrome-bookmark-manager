@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import shutil
 import subprocess
@@ -15,6 +16,7 @@ from chrome_bookmark_manager import __version__
 from chrome_bookmark_manager.discovery import candidate_bookmark_paths, current_platform
 from chrome_bookmark_manager.logging_setup import LOG_DIR_ENV_VAR, LOG_FILE_NAME
 from chrome_bookmark_manager.mcp_server import (
+    READ_ONLY_TOOL,
     build_server,
     get_bookmark_tree,
     get_bookmarks_markdown,
@@ -23,6 +25,9 @@ from chrome_bookmark_manager.mcp_server import (
 FIXTURES = Path(__file__).parent / "fixtures" / "bookmarks"
 SIMPLE = FIXTURES / "simple_bookmarks.json"
 MALFORMED_CANARY = "Canary Bookmark Name"
+# invalid_schema.json is well-formed JSON whose URL node lacks a url; this is
+# that node's name, which must never appear in an error message.
+SCHEMA_CANARY = "Missing URL"
 TOOL_NAMES = {"list_bookmark_files", "get_bookmark_tree", "get_bookmarks_markdown"}
 SUBPROCESS_TIMEOUT_SECONDS = 30
 SERVER_COMMAND = "chrome-bookmark-manager-mcp"
@@ -64,11 +69,40 @@ def test_missing_file_becomes_tool_error(tmp_path: Path) -> None:
         get_bookmark_tree(str(tmp_path / "Bookmarks"))
 
 
-def test_tool_error_does_not_echo_bookmark_content() -> None:
-    with pytest.raises(ToolError) as excinfo:
-        get_bookmark_tree(str(FIXTURES / "malformed.json"))
+def test_markdown_tool_reports_errors_as_tool_errors(tmp_path: Path) -> None:
+    with pytest.raises(ToolError, match="does not exist"):
+        get_bookmarks_markdown(str(tmp_path / "Bookmarks"))
 
-    assert MALFORMED_CANARY not in str(excinfo.value)
+
+@pytest.mark.parametrize(
+    ("fixture", "expected", "canary"),
+    [
+        ("malformed.json", "not valid JSON", MALFORMED_CANARY),
+        ("invalid_schema.json", "invalid Chrome schema", SCHEMA_CANARY),
+    ],
+)
+def test_tool_error_does_not_echo_bookmark_content(
+    fixture: str,
+    expected: str,
+    canary: str,
+) -> None:
+    with pytest.raises(ToolError, match=expected) as excinfo:
+        get_bookmark_tree(str(FIXTURES / fixture))
+
+    assert canary not in str(excinfo.value)
+
+
+def test_unreadable_path_is_logged_and_reported(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with (
+        caplog.at_level(logging.WARNING, logger="chrome_bookmark_manager"),
+        pytest.raises(ToolError, match="not a regular file"),
+    ):
+        get_bookmark_tree(str(tmp_path))
+
+    assert f"Bookmark path is not a regular file: {tmp_path}" in caplog.text
 
 
 @pytest.mark.anyio
@@ -77,9 +111,7 @@ async def test_server_registers_read_only_tools() -> None:
 
     assert {tool.name for tool in tools} == TOOL_NAMES
     for tool in tools:
-        assert tool.annotations is not None
-        assert tool.annotations.readOnlyHint is True
-        assert tool.annotations.destructiveHint is False
+        assert tool.annotations == READ_ONLY_TOOL
         assert tool.outputSchema is not None
 
 
@@ -132,7 +164,7 @@ async def test_stdio_server_serves_bookmark_tree(isolated_log_dir: Path) -> None
 
 
 @pytest.mark.anyio
-async def test_stdio_server_reports_parse_errors_as_tool_errors(
+async def test_stdio_server_reports_missing_file_as_tool_error(
     tmp_path: Path,
     isolated_log_dir: Path,
 ) -> None:
@@ -153,6 +185,38 @@ async def test_stdio_server_reports_parse_errors_as_tool_errors(
         block.text for block in result.content if isinstance(block, TextContent)
     ]
     assert any("does not exist" in message for message in messages)
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("fixture", "expected", "canary"),
+    [
+        ("malformed.json", "not valid JSON", MALFORMED_CANARY),
+        ("invalid_schema.json", "invalid Chrome schema", SCHEMA_CANARY),
+    ],
+)
+async def test_stdio_server_parse_errors_do_not_echo_bookmark_content(
+    fixture: str,
+    expected: str,
+    canary: str,
+    isolated_log_dir: Path,
+) -> None:
+    params = _server_params(_server_env(isolated_log_dir))
+
+    async with (
+        stdio_client(params) as (read, write),
+        ClientSession(read, write) as session,
+    ):
+        await session.initialize()
+        result = await session.call_tool(
+            "get_bookmark_tree",
+            {"path": str(FIXTURES / fixture)},
+        )
+
+    assert result.isError
+    wire = result.model_dump_json()
+    assert expected in wire
+    assert canary not in wire
 
 
 @pytest.mark.anyio
@@ -230,7 +294,11 @@ def test_stdout_carries_only_protocol_messages(isolated_log_dir: Path) -> None:
 
     lines = completed.stdout.splitlines()
     assert lines, completed.stderr
-    responses = [json.loads(line) for line in lines]
-    assert all(response["jsonrpc"] == "2.0" for response in responses)
-    assert {response["id"] for response in responses} == {1, 2}
+    responses = {response["id"]: response for response in map(json.loads, lines)}
+    assert len(responses) == len(lines)
+    assert all(response["jsonrpc"] == "2.0" for response in responses.values())
+    assert set(responses) == {1, 2}
+    assert "error" not in responses[2]
+    assert responses[2]["result"]["isError"] is False
+    assert completed.returncode == 0, completed.stderr
     assert "MCP server" in completed.stderr

@@ -136,11 +136,20 @@ stdin/stdout, so an MCP client starts it; there is nothing to run by hand.
 None of the tools modify bookmarks. They report themselves to clients as
 read-only.
 
-Register it with Claude Code from a clone of this repository:
+Register it with Claude Code from a clone of this repository (macOS and
+Linux):
 
 ```bash
 poetry install
 claude mcp add chrome-bookmarks -- "$(poetry env info -p)/bin/chrome-bookmark-manager-mcp"
+```
+
+From a clone on Windows (PowerShell), where virtual environments keep commands
+in `Scripts\` as `.exe` files:
+
+```powershell
+poetry install
+claude mcp add chrome-bookmarks -- "$(poetry env info -p)\Scripts\chrome-bookmark-manager-mcp.exe"
 ```
 
 Or, after following [Try It Without Cloning](#try-it-without-cloning) on
@@ -156,8 +165,15 @@ starts the server without your shell's `PATH` changes or an activated virtual
 environment.
 
 The server writes to the same log file as the CLI (see [Logging](#logging)).
-Add `-v` or `-vv` after the command to see more on stderr, which MCP clients
-usually show in their server logs.
+To see more on stderr, which MCP clients usually show in their server logs,
+register the server with `-v` (info) or `-vv` (debug) at the end. The flag is
+saved as part of the server's command, so remove the server and add it again to
+change it:
+
+```bash
+claude mcp remove chrome-bookmarks
+claude mcp add chrome-bookmarks -- "$(poetry env info -p)/bin/chrome-bookmark-manager-mcp" -vv
+```
 
 ## Logging
 
