@@ -9,7 +9,5 @@ if TYPE_CHECKING:
 
 
 class BookmarkFileTooLargeError(BookmarkParseError):
-    def __init__(self, path: Path, size: int, limit: int) -> None:
-        super().__init__(
-            f"Bookmark file is too large ({size} bytes; limit {limit}): {path}",
-        )
+    def __init__(self, path: Path, limit: int) -> None:
+        super().__init__(f"Bookmark file is larger than {limit} bytes: {path}")

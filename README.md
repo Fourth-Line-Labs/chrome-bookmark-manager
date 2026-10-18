@@ -168,11 +168,19 @@ The server writes to the same log file as the CLI (see [Logging](#logging)).
 To see more on stderr, which MCP clients usually show in their server logs,
 register the server with `-v` (info) or `-vv` (debug) at the end. The flag is
 saved as part of the server's command, so remove the server and add it again to
-change it:
+change it. Use the same path you registered with. From a clone on macOS and
+Linux:
 
 ```bash
 claude mcp remove chrome-bookmarks
 claude mcp add chrome-bookmarks -- "$(poetry env info -p)/bin/chrome-bookmark-manager-mcp" -vv
+```
+
+From a clone on Windows (PowerShell):
+
+```powershell
+claude mcp remove chrome-bookmarks
+claude mcp add chrome-bookmarks -- "$(poetry env info -p)\Scripts\chrome-bookmark-manager-mcp.exe" -vv
 ```
 
 ## Logging

@@ -11,6 +11,7 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from mcp.server.fastmcp.exceptions import ToolError
 from mcp.types import LATEST_PROTOCOL_VERSION, TextContent
+from pydantic import TypeAdapter, ValidationError
 
 from chrome_bookmark_manager import __version__
 from chrome_bookmark_manager.discovery import candidate_bookmark_paths, current_platform
@@ -31,6 +32,7 @@ SCHEMA_CANARY = "Missing URL"
 TOOL_NAMES = {"list_bookmark_files", "get_bookmark_tree", "get_bookmarks_markdown"}
 SUBPROCESS_TIMEOUT_SECONDS = 30
 SERVER_COMMAND = "chrome-bookmark-manager-mcp"
+JSON_OBJECT = TypeAdapter(dict[str, object])
 
 
 @pytest.fixture
@@ -103,6 +105,15 @@ def test_unreadable_path_is_logged_and_reported(
         get_bookmark_tree(str(tmp_path))
 
     assert f"Bookmark path is not a regular file: {tmp_path}" in caplog.text
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows expands ~user without checking the user exists",
+)
+def test_unexpandable_home_becomes_tool_error() -> None:
+    with pytest.raises(ToolError, match="Cannot expand the home directory"):
+        get_bookmark_tree("~no_such_user_for_this_test/Bookmarks")
 
 
 @pytest.mark.anyio
@@ -294,11 +305,22 @@ def test_stdout_carries_only_protocol_messages(isolated_log_dir: Path) -> None:
 
     lines = completed.stdout.splitlines()
     assert lines, completed.stderr
-    responses = {response["id"]: response for response in map(json.loads, lines)}
-    assert len(responses) == len(lines)
-    assert all(response["jsonrpc"] == "2.0" for response in responses.values())
+    responses: dict[object, dict[str, object]] = {}
+    for line in lines:
+        try:
+            message = JSON_OBJECT.validate_json(line)
+        except ValidationError:
+            pytest.fail(f"non-JSON-object line on stdout: {line!r}")
+        assert message.get("jsonrpc") == "2.0", f"not a JSON-RPC message: {line!r}"
+        # Notifications (no id) are legal on the stream; only responses are keyed.
+        if "id" in message:
+            assert message["id"] not in responses, f"duplicate response: {line!r}"
+            responses[message["id"]] = message
     assert set(responses) == {1, 2}
-    assert "error" not in responses[2]
-    assert responses[2]["result"]["isError"] is False
+    for response in responses.values():
+        assert "error" not in response, response
+        assert "result" in response, response
+    tool_result = JSON_OBJECT.validate_python(responses[2]["result"])
+    assert tool_result.get("isError") is False
     assert completed.returncode == 0, completed.stderr
     assert "MCP server" in completed.stderr

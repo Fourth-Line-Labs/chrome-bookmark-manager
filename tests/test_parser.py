@@ -1,7 +1,9 @@
+import errno
 import os
 import shutil
 import sys
 from pathlib import Path
+from typing import NoReturn
 
 import pytest
 
@@ -57,10 +59,10 @@ def test_special_file_is_rejected_before_reading() -> None:
 def test_file_over_size_limit_is_rejected(tmp_path: Path) -> None:
     bookmarks_file = tmp_path / "Bookmarks"
     shutil.copy(FIXTURES / "simple_bookmarks.json", bookmarks_file)
-    size = bookmarks_file.stat().st_size
+    limit = bookmarks_file.stat().st_size - 1
 
-    with pytest.raises(BookmarkFileTooLargeError, match=f"{size} bytes"):
-        load_bookmarks_file(bookmarks_file, max_bytes=size - 1)
+    with pytest.raises(BookmarkFileTooLargeError, match=f"larger than {limit} bytes"):
+        load_bookmarks_file(bookmarks_file, max_bytes=limit)
 
 
 def test_file_at_size_limit_is_read(tmp_path: Path) -> None:
@@ -97,3 +99,47 @@ def test_unreadable_file_has_clear_error(tmp_path: Path) -> None:
             load_bookmarks_file(bookmarks_file)
     finally:
         bookmarks_file.chmod(0o600)
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32" or os.geteuid() == 0,
+    reason="needs POSIX permissions and a non-root user",
+)
+def test_file_in_locked_directory_has_clear_error(tmp_path: Path) -> None:
+    # exists() raises PermissionError here instead of returning False.
+    locked = tmp_path / "locked"
+    locked.mkdir()
+    shutil.copy(FIXTURES / "simple_bookmarks.json", locked / "Bookmarks")
+    locked.chmod(0)
+
+    try:
+        with pytest.raises(BookmarkReadError, match="Permission denied"):
+            load_bookmarks_file(locked / "Bookmarks")
+    finally:
+        locked.chmod(0o700)
+
+
+@pytest.mark.parametrize(
+    ("error", "reason"),
+    [
+        (PermissionError(errno.EACCES, "Permission denied"), "Permission denied"),
+        (OSError("no strerror available"), "no strerror available"),
+    ],
+)
+def test_os_error_while_reading_has_clear_error(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    error: OSError,
+    reason: str,
+) -> None:
+    """Covers the read-error branch on every platform, even as root."""
+    bookmarks_file = tmp_path / "Bookmarks"
+    shutil.copy(FIXTURES / "simple_bookmarks.json", bookmarks_file)
+
+    def fail_open(*_args: object, **_kwargs: object) -> NoReturn:
+        raise error
+
+    monkeypatch.setattr(Path, "open", fail_open)
+
+    with pytest.raises(BookmarkReadError, match=reason):
+        load_bookmarks_file(bookmarks_file)

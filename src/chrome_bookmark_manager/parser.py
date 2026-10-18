@@ -31,14 +31,6 @@ def load_bookmarks_file(
     *,
     max_bytes: int = MAX_BOOKMARK_FILE_BYTES,
 ) -> ChromeBookmarksFile:
-    if not path.exists():
-        raise BookmarkFileMissingError(path)
-    # Directories and special files such as /dev/zero pass exists(); reading
-    # one fails or never finishes.
-    if not path.is_file():
-        raise BookmarkNotAFileError(path)
-
-    logger.info("Loading bookmarks from %s", path)
     content = _read_text(path, max_bytes=max_bytes)
     logger.debug("Read %d characters", len(content))
     try:
@@ -53,11 +45,24 @@ def load_bookmarks_file(
 
 
 def _read_text(path: Path, *, max_bytes: int) -> str:
+    # The checks sit inside the try because exists() itself raises
+    # PermissionError when a parent directory denies access.
     try:
-        size = path.stat().st_size
-        if size > max_bytes:
-            raise BookmarkFileTooLargeError(path, size, max_bytes)
-        return path.read_text(encoding="utf-8")
+        if not path.exists():
+            raise BookmarkFileMissingError(path)
+        # Directories and special files such as /dev/zero pass exists();
+        # reading one fails or never finishes.
+        if not path.is_file():
+            raise BookmarkNotAFileError(path)
+
+        logger.info("Loading bookmarks from %s", path)
+        # Read at most one byte past the limit, so the cap holds even if the
+        # file grows after the checks above.
+        with path.open("rb") as handle:
+            data = handle.read(max_bytes + 1)
+        if len(data) > max_bytes:
+            raise BookmarkFileTooLargeError(path, max_bytes)
+        return data.decode("utf-8")
     except UnicodeDecodeError as error:
         raise BookmarkEncodingError(path) from error
     except OSError as error:

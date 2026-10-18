@@ -24,7 +24,10 @@ from mcp.types import ToolAnnotations
 
 from chrome_bookmark_manager import __version__
 from chrome_bookmark_manager.discovery import discover_bookmark_files
-from chrome_bookmark_manager.errors import BookmarkParseError
+from chrome_bookmark_manager.errors import (
+    BookmarkParseError,
+    BookmarkPathExpansionError,
+)
 from chrome_bookmark_manager.logging_setup import configure_logging
 from chrome_bookmark_manager.models import BookmarkCandidate, ChromeBookmarksFile
 from chrome_bookmark_manager.parser import load_bookmarks_file
@@ -110,10 +113,18 @@ def main(argv: list[str] | None = None) -> int:
 
 def _load(path: str) -> ChromeBookmarksFile:
     try:
-        return load_bookmarks_file(Path(path).expanduser())
+        return load_bookmarks_file(_expand_home(path))
     except BookmarkParseError as error:
         logger.warning("%s", error)
         raise ToolError(str(error)) from error
+
+
+def _expand_home(path: str) -> Path:
+    try:
+        return Path(path).expanduser()
+    except RuntimeError as error:
+        # Raised for an unknown ~user or when no home directory can be found.
+        raise BookmarkPathExpansionError(path) from error
 
 
 def _build_parser() -> argparse.ArgumentParser:

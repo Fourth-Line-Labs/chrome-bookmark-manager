@@ -33,8 +33,9 @@ capabilities are available to AI clients through an MCP server.
   that are missing, not regular files, too large, unreadable, not UTF-8,
   malformed, or schema-invalid.
 - `parser` loads a bookmark file and raises those errors with clear messages.
-  It rejects directories, special files, and files over 64 MiB before
-  reading, so a bad path fails fast instead of hanging or exhausting memory.
+  It rejects directories and special files before opening them, and reads at
+  most 64 MiB, so a bad path fails fast instead of hanging or exhausting
+  memory.
 - `renderer` converts validated bookmark data into Markdown.
 - `logging_setup` sends package logs to stderr and a rotating debug log file
   in the platform's log directory.
