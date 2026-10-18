@@ -120,6 +120,45 @@ poetry run chrome-bookmark-manager \
   --output bookmarks.md
 ```
 
+## MCP Server
+
+`chrome-bookmark-manager-mcp` is a read-only
+[MCP](https://modelcontextprotocol.io/) server, so AI clients such as Claude
+Code and Claude Desktop can read your bookmarks as tools. It talks MCP over
+stdin/stdout, so an MCP client starts it; there is nothing to run by hand.
+
+| Tool | What it returns |
+| --- | --- |
+| `list_bookmark_files` | The bookmark files `--list-discovered` would find |
+| `get_bookmark_tree` | One file's folders and bookmarks as structured data |
+| `get_bookmarks_markdown` | One file as the same Markdown outline the CLI writes |
+
+None of the tools modify bookmarks. They report themselves to clients as
+read-only.
+
+Register it with Claude Code from a clone of this repository:
+
+```bash
+poetry install
+claude mcp add chrome-bookmarks -- "$(poetry env info -p)/bin/chrome-bookmark-manager-mcp"
+```
+
+Or, after following [Try It Without Cloning](#try-it-without-cloning) on
+Windows:
+
+```powershell
+claude mcp add chrome-bookmarks -- "$env:TEMP\cbm\Scripts\chrome-bookmark-manager-mcp.exe"
+```
+
+Then ask Claude something like "list my bookmark files" or "show the folders in
+my Chrome bookmarks". Use the full path to the command, because the client
+starts the server without your shell's `PATH` changes or an activated virtual
+environment.
+
+The server writes to the same log file as the CLI (see [Logging](#logging)).
+Add `-v` or `-vv` after the command to see more on stderr, which MCP clients
+usually show in their server logs.
+
 ## Logging
 
 Every run that gets past argument parsing writes a debug log, so there is a
