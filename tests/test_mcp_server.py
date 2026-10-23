@@ -126,6 +126,10 @@ def test_unknown_user_home_becomes_tool_error(
     assert f"Cannot expand '~' in bookmark path: {path}" in caplog.text
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows never looks up the ~user name, so a NUL in it raises nothing",
+)
 def test_nul_byte_in_user_name_becomes_tool_error() -> None:
     # A JSON string from an MCP client can carry a NUL; expanduser() then
     # raises ValueError instead of RuntimeError.
