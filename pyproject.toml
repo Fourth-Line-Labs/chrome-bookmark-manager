@@ -15,7 +15,7 @@ chrome-bookmark-manager-mcp = "chrome_bookmark_manager.mcp_server:main"
 packages = [{ include = "chrome_bookmark_manager", from = "src" }]
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.4.0"
+pytest = "^9.0.3"
 pyright = "^1.1.402"
 ruff = "^0.11.13"
 anyio = "^4.14.2"
