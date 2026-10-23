@@ -50,8 +50,9 @@ def _read_text(path: Path, *, max_bytes: int) -> str:
     try:
         if not path.exists():
             raise BookmarkFileMissingError(path)
-        # Directories and special files such as /dev/zero pass exists();
-        # reading one fails or never finishes.
+        # Directories and special files such as /dev/zero pass exists().
+        # Rejecting them here gives a clear message; the bounded read below
+        # is the backstop for anything that slips past this check.
         if not path.is_file():
             raise BookmarkNotAFileError(path)
 

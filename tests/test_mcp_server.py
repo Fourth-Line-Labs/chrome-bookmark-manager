@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import NoReturn
 
 import pytest
 from mcp import ClientSession, StdioServerParameters
@@ -111,9 +112,53 @@ def test_unreadable_path_is_logged_and_reported(
     sys.platform == "win32",
     reason="Windows expands ~user without checking the user exists",
 )
-def test_unexpandable_home_becomes_tool_error() -> None:
-    with pytest.raises(ToolError, match="Cannot expand the home directory"):
-        get_bookmark_tree("~no_such_user_for_this_test/Bookmarks")
+def test_unknown_user_home_becomes_tool_error(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    path = "~no_such_user_for_this_test/Bookmarks"
+
+    with (
+        caplog.at_level(logging.WARNING, logger="chrome_bookmark_manager"),
+        pytest.raises(ToolError, match="Cannot expand '~'"),
+    ):
+        get_bookmark_tree(path)
+
+    assert f"Cannot expand '~' in bookmark path: {path}" in caplog.text
+
+
+def test_nul_byte_in_user_name_becomes_tool_error() -> None:
+    # A JSON string from an MCP client can carry a NUL; expanduser() then
+    # raises ValueError instead of RuntimeError.
+    with pytest.raises(ToolError, match="Cannot expand '~'"):
+        get_bookmark_tree("~a\x00b/Bookmarks")
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        RuntimeError("Could not determine home directory."),
+        ValueError("embedded null byte"),
+    ],
+)
+def test_expansion_failure_is_logged_on_every_platform(
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    error: Exception,
+) -> None:
+    """Covers both expanduser() failures, including a bare ~ with no home."""
+
+    def fail_expanduser(_self: Path) -> NoReturn:
+        raise error
+
+    monkeypatch.setattr(Path, "expanduser", fail_expanduser)
+
+    with (
+        caplog.at_level(logging.WARNING, logger="chrome_bookmark_manager"),
+        pytest.raises(ToolError, match="Cannot expand '~'"),
+    ):
+        get_bookmarks_markdown("~/Bookmarks")
+
+    assert "Cannot expand '~' in bookmark path: ~/Bookmarks" in caplog.text
 
 
 @pytest.mark.anyio
@@ -312,11 +357,14 @@ def test_stdout_carries_only_protocol_messages(isolated_log_dir: Path) -> None:
         except ValidationError:
             pytest.fail(f"non-JSON-object line on stdout: {line!r}")
         assert message.get("jsonrpc") == "2.0", f"not a JSON-RPC message: {line!r}"
-        # Notifications (no id) are legal on the stream; only responses are keyed.
-        if "id" in message:
-            assert message["id"] not in responses, f"duplicate response: {line!r}"
-            responses[message["id"]] = message
-    assert set(responses) == {1, 2}
+        # Notifications (no id, but a method) are legal on the stream; only
+        # responses are keyed.
+        if "id" not in message:
+            assert "method" in message, f"neither response nor notification: {line!r}"
+            continue
+        assert message["id"] not in responses, f"duplicate response: {line!r}"
+        responses[message["id"]] = message
+    assert set(responses) == {1, 2}, (lines, completed.stderr)
     for response in responses.values():
         assert "error" not in response, response
         assert "result" in response, response

@@ -122,8 +122,9 @@ def _load(path: str) -> ChromeBookmarksFile:
 def _expand_home(path: str) -> Path:
     try:
         return Path(path).expanduser()
-    except RuntimeError as error:
-        # Raised for an unknown ~user or when no home directory can be found.
+    except (RuntimeError, ValueError) as error:
+        # RuntimeError: no home directory can be found, or (on POSIX) ~user
+        # names an unknown user. ValueError: the ~user name holds a NUL byte.
         raise BookmarkPathExpansionError(path) from error
 
 

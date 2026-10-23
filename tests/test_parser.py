@@ -51,7 +51,8 @@ def test_directory_is_rejected(tmp_path: Path) -> None:
 
 @pytest.mark.skipif(not Path("/dev/zero").exists(), reason="needs /dev/zero")
 def test_special_file_is_rejected_before_reading() -> None:
-    # Reading /dev/zero never ends, so this would hang without the check.
+    # Without the check, the bounded read would still stop /dev/zero, but
+    # with a misleading "too large" error instead of this one.
     with pytest.raises(BookmarkNotAFileError, match="not a regular file"):
         load_bookmarks_file(Path("/dev/zero"))
 
@@ -113,10 +114,12 @@ def test_file_in_locked_directory_has_clear_error(tmp_path: Path) -> None:
     locked.chmod(0)
 
     try:
-        with pytest.raises(BookmarkReadError, match="Permission denied"):
+        with pytest.raises(BookmarkReadError, match="Permission denied") as excinfo:
             load_bookmarks_file(locked / "Bookmarks")
     finally:
         locked.chmod(0o700)
+
+    assert "[Errno" not in str(excinfo.value)
 
 
 @pytest.mark.parametrize(
@@ -141,5 +144,8 @@ def test_os_error_while_reading_has_clear_error(
 
     monkeypatch.setattr(Path, "open", fail_open)
 
-    with pytest.raises(BookmarkReadError, match=reason):
+    with pytest.raises(BookmarkReadError, match=reason) as excinfo:
         load_bookmarks_file(bookmarks_file)
+
+    # strerror is preferred over str(error), which would add "[Errno 13]".
+    assert "[Errno" not in str(excinfo.value)

@@ -7,7 +7,7 @@ summary: >-
   Describes each module's role (discovery, models, errors, parser, renderer,
   logging_setup, cli, mcp_server) and the read-only constraint.
 created: 2026-06-11
-updated: 2026-10-18
+updated: 2026-10-23
 tags: [phase-1, architecture, cli, mcp]
 status: current
 source_ref: "main @ d508679"
@@ -31,7 +31,8 @@ capabilities are available to AI clients through an MCP server.
   discovery.
 - `errors` defines `BookmarkParseError` and its subclasses for bookmark files
   that are missing, not regular files, too large, unreadable, not UTF-8,
-  malformed, or schema-invalid.
+  malformed, or schema-invalid, plus one for paths whose `~` cannot be
+  expanded.
 - `parser` loads a bookmark file and raises those errors with clear messages.
   It rejects directories and special files before opening them, and reads at
   most 64 MiB, so a bad path fails fast instead of hanging or exhausting
